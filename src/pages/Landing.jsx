@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Brain, FileText, Trophy, Target, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Brain, FileText, Trophy, Target, ArrowRight, CheckCircle2, BookOpen } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 export default function Landing() {
