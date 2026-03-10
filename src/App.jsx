@@ -5,11 +5,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import PrivateRoute from './components/PrivateRoute';
 import DashboardLayout from './components/Layout';
-
-// Mock dashboard page component for now
-function DashboardHome() {
-  return <div className="p-8"><h1 className="text-3xl font-bold">Dashboard Home</h1></div>;
-}
+import DashboardHome from './pages/DashboardHome';
+import GenerateQuiz from './pages/GenerateQuiz';
+import QuizPlayer from './pages/QuizPlayer';
+import AITutor from './pages/AITutor';
+import Performance from './pages/Performance';
 
 function App() {
   return (
@@ -25,9 +25,10 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<DashboardHome />} />
-              <Route path="/dashboard/generate" element={<div className="font-bold text-2xl">Generate Quiz</div>} />
-              <Route path="/dashboard/tutor" element={<div className="font-bold text-2xl">AI Tutor</div>} />
-              <Route path="/dashboard/performance" element={<div className="font-bold text-2xl">Performance</div>} />
+              <Route path="/dashboard/generate" element={<GenerateQuiz />} />
+              <Route path="/dashboard/play" element={<QuizPlayer />} />
+              <Route path="/dashboard/tutor" element={<AITutor />} />
+              <Route path="/dashboard/performance" element={<Performance />} />
             </Route>
           </Route>
         </Routes>
