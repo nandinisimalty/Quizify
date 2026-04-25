@@ -84,6 +84,7 @@ export default function QuizPlayer() {
         // Save Attempt
         await addDoc(collection(db, 'attempts'), {
           userId: currentUser.uid,
+          quizId: quiz.id || null, // Capture assigned quiz ID
           topic: quiz.topic,
           difficulty: quiz.difficulty,
           score: finalScore,

@@ -71,7 +71,13 @@ export default function DashboardLayout() {
             </div>
             <div className="flex-1 truncate">
               <p className="text-sm font-semibold text-gray-900 truncate">{userData?.name || 'User'}</p>
-              <p className="text-xs text-gray-500 truncate">Lvl {userData?.level || 1} • {userData?.xpPoints || 0} XP</p>
+              <div className="flex items-center gap-2 text-xs text-gray-500 truncate mt-0.5">
+                <span className="font-bold text-primary-600">Lvl {userData?.level || 1}</span>
+                <span>•</span>
+                <span className="font-bold text-amber-500">{userData?.xpPoints || 0} XP</span>
+                <span>•</span>
+                <span className="font-bold text-coral-500">{userData?.currentStreak || 1} 🔥</span>
+              </div>
             </div>
           </div>
           <button

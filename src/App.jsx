@@ -5,7 +5,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import PrivateRoute from './components/PrivateRoute';
 import DashboardLayout from './components/Layout';
+import TeacherLayout from './components/TeacherLayout';
 import DashboardHome from './pages/DashboardHome';
+import TeacherHome from './pages/TeacherHome';
+import TeacherQuizzes from './pages/TeacherQuizzes';
+import TeacherPerformance from './pages/TeacherPerformance';
 import GenerateQuiz from './pages/GenerateQuiz';
 import QuizPlayer from './pages/QuizPlayer';
 import AITutor from './pages/AITutor';
@@ -21,14 +25,23 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected Routes */}
-          <Route element={<PrivateRoute />}>
+          {/* Student Routes */}
+          <Route element={<PrivateRoute allowedRoles={['student']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<DashboardHome />} />
               <Route path="/dashboard/generate" element={<GenerateQuiz />} />
               <Route path="/dashboard/play" element={<QuizPlayer />} />
               <Route path="/dashboard/tutor" element={<AITutor />} />
               <Route path="/dashboard/performance" element={<Performance />} />
+            </Route>
+          </Route>
+
+          {/* Teacher Routes */}
+          <Route element={<PrivateRoute allowedRoles={['teacher']} />}>
+            <Route element={<TeacherLayout />}>
+              <Route path="/teacher-dashboard" element={<TeacherHome />} />
+              <Route path="/teacher-dashboard/quizzes" element={<TeacherQuizzes />} />
+              <Route path="/teacher-dashboard/students" element={<TeacherPerformance />} />
             </Route>
           </Route>
         </Routes>
