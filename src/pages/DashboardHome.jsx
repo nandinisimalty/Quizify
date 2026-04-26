@@ -292,31 +292,11 @@ export default function DashboardHome() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8">
         
         {/* Left Column (2 spans): Assigned Quizzes & Badges */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 flex flex-col gap-6 md:gap-8 order-1">
           
-          {/* Active Badges */}
-          <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-6 flex flex-col h-full">
-            <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-amber-500" />
-              Your Badges
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {badges.map((badge, i) => (
-                <div key={i} className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
-                  badge.earned ? 'bg-white border-gray-100 shadow-sm' : 'bg-gray-50 border-transparent opacity-50 grayscale'
-                }`}>
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${badge.earned ? badge.bg : 'bg-gray-200'}`}>
-                    <badge.icon className={`w-6 h-6 ${badge.earned ? badge.color : 'text-gray-400'}`} />
-                  </div>
-                  <span className="text-xs font-bold text-center text-gray-700">{badge.title}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Assigned Quizzes */}
           <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm overflow-hidden flex flex-col">
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
@@ -325,7 +305,7 @@ export default function DashboardHome() {
                 Assigned Quizzes
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 max-h-96">
+            <div className="overflow-y-auto divide-y divide-gray-100 max-h-96">
               {loading ? (
                 <div className="p-8 text-center text-gray-500">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-secondary-500" />
@@ -368,10 +348,30 @@ export default function DashboardHome() {
               )}
             </div>
           </div>
+
+          {/* Active Badges */}
+          <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm p-6 flex flex-col">
+            <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-4">
+              <Award className="w-5 h-5 text-amber-500" />
+              Your Badges
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {badges.map((badge, i) => (
+                <div key={i} className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                  badge.earned ? 'bg-white border-gray-100 shadow-sm' : 'bg-gray-50 border-transparent opacity-50 grayscale'
+                }`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${badge.earned ? badge.bg : 'bg-gray-200'}`}>
+                    <badge.icon className={`w-6 h-6 ${badge.earned ? badge.color : 'text-gray-400'}`} />
+                  </div>
+                  <span className="text-xs font-bold text-center text-gray-700">{badge.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Class Leaderboard & Recent Activity */}
-        <div className="space-y-8">
+        <div className="flex flex-col gap-6 md:gap-8 order-2">
           
           {/* Class Leaderboard */}
           <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm overflow-hidden flex flex-col">
@@ -430,7 +430,7 @@ export default function DashboardHome() {
                 </button>
               )}
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 max-h-96">
+            <div className="overflow-y-auto divide-y divide-gray-100 max-h-96">
               {uiAttempts.length === 0 ? (
                  <div className="p-8 text-center text-gray-500 h-full flex items-center justify-center">
                    <p className="font-medium text-sm">No attempts yet.</p>
