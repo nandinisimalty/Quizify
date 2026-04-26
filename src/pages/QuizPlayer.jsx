@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { processUserActivity } from '../services/userLogic';
 import { doc, updateDoc, increment, collection, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { CheckCircle2, XCircle, ArrowRight, Trophy, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, Trophy, Clock, AlertCircle, Zap } from 'lucide-react';
 
 export default function QuizPlayer() {
   const location = useLocation();
@@ -19,6 +20,10 @@ export default function QuizPlayer() {
   const [results, setResults] = useState([]);
   const [timeLeft, setTimeLeft] = useState(60 * (quiz?.questions?.length || 5)); // 1 min per question
   const [isFinished, setIsFinished] = useState(false);
+  const [leveledUpTo, setLeveledUpTo] = useState(null);
+  const [usedHint, setUsedHint] = useState(false);
+  const [earnedXp, setEarnedXp] = useState(0);
+  const [bonusData, setBonusData] = useState(null);
 
   useEffect(() => {
     if (!quiz) {
@@ -75,8 +80,16 @@ export default function QuizPlayer() {
     setIsFinished(true);
     
     // Calculate final score
-    const finalScore = Math.round((score / quiz.questions.length) * 100);
-    const xpEarned = finalScore; // 1 XP per percentage point
+    const finalPercentage = Math.round((score / quiz.questions.length) * 100);
+    
+    // NEW XP Logic: Score-Based
+    let xpEarned = Math.floor(finalPercentage / 2);
+    if (finalPercentage >= 80) xpEarned += 10;
+    if (finalPercentage === 100) xpEarned += 20;
+    if (usedHint) xpEarned -= 10;
+    xpEarned = Math.max(0, xpEarned);
+    
+    setEarnedXp(xpEarned);
     
     // Save to Firestore if user is authenticated
     if (currentUser && db) {
@@ -84,22 +97,46 @@ export default function QuizPlayer() {
         // Save Attempt
         await addDoc(collection(db, 'attempts'), {
           userId: currentUser.uid,
+          studentName: userData?.name || currentUser.displayName || currentUser.email || 'Student',
           quizId: quiz.id || null, // Capture assigned quiz ID
           topic: quiz.topic,
           difficulty: quiz.difficulty,
-          score: finalScore,
+          score: finalPercentage,
           totalQuestions: quiz.questions.length,
           timestamp: new Date().toISOString()
         });
 
         // Update User XP and Level
         const newXp = (userData?.xpPoints || 0) + xpEarned;
-        const newLevel = Math.floor(newXp / 100) + 1; // 100 XP per level
+        
+        const calculateLevel = (xp) => {
+          if (xp >= 1000) return 5;
+          if (xp >= 500) return 4;
+          if (xp >= 250) return 3;
+          if (xp >= 100) return 2;
+          return 1;
+        };
+        
+        const newLevel = calculateLevel(newXp);
+        
+        if (newLevel > (userData?.level || 1)) {
+          setLeveledUpTo(newLevel);
+        }
 
         await updateDoc(doc(db, 'users', currentUser.uid), {
           xpPoints: increment(xpEarned),
           level: newLevel
         });
+
+        // Trigger Daily/Streak Bonus Checks
+        const activityResult = await processUserActivity(currentUser.uid, db);
+        if (activityResult && (activityResult.dailyBonus > 0 || activityResult.streakBonus > 0)) {
+           setBonusData(activityResult);
+           // Calculate if these extra bonuses caused a secondary level up
+           if (activityResult.levelUpTo && activityResult.levelUpTo > newLevel) {
+               setLeveledUpTo(activityResult.levelUpTo);
+           }
+        }
       } catch (error) {
         console.error("Error saving quiz results:", error);
       }
@@ -114,14 +151,63 @@ export default function QuizPlayer() {
 
   if (isFinished) {
     const finalPercentage = Math.round((score / quiz.questions.length) * 100);
+    
     return (
-      <div className="max-w-3xl mx-auto py-8 animate-fade-in-up">
+      <div className="max-w-3xl mx-auto py-8 animate-fade-in-up relative">
+        {/* Level Up Popup overlay */}
+        {leveledUpTo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl p-8 text-center shadow-2xl max-w-sm mx-4 animate-scale-up">
+              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <Trophy className="w-10 h-10 text-yellow-600 animate-bounce" />
+              </div>
+              <h3 className="text-2xl font-extrabold text-gray-900 mb-2">Level Up!</h3>
+              <p className="text-gray-600 mb-6 font-medium text-lg">You reached <span className="text-primary-600 font-bold">Level {leveledUpTo}</span>!</p>
+              <button 
+                onClick={() => setLeveledUpTo(null)}
+                className="w-full py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-md btn-bouncy"
+              >
+                Awesome!
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Bonus Popups Overlay */}
+        {bonusData && (
+          <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 pointer-events-none">
+            {bonusData.dailyBonus > 0 && (
+              <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up pointer-events-auto">
+                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">+{bonusData.dailyBonus} XP Daily Bonus</h4>
+                </div>
+              </div>
+            )}
+            {bonusData.streakBonus > 0 && (
+              <div className="bg-white border border-orange-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up delay-100 pointer-events-auto">
+                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-lg">
+                  🔥
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">{bonusData.newStreak} Day Streak! +{bonusData.streakBonus} XP</h4>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-100 mb-6">
             <Trophy className="w-12 h-12 text-primary-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
-          <p className="text-gray-500 mb-8">You scored {score} out of {quiz.questions.length} ({finalPercentage}%)</p>
+          <p className="text-gray-500 mb-2">You scored {score} out of {quiz.questions.length} ({finalPercentage}%)</p>
+          <div className="inline-block bg-primary-50 text-primary-700 font-bold px-4 py-2 rounded-xl mb-8 border border-primary-100">
+            +{earnedXp} XP Earned
+          </div>
           
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors">
@@ -261,7 +347,22 @@ export default function QuizPlayer() {
           </div>
         </div>
       ) : (
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center w-full">
+          {!usedHint ? (
+            <button
+              onClick={() => {
+                setUsedHint(true);
+                alert("Hint: " + currentQuestion.explanation);
+              }}
+              className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors border border-amber-200"
+            >
+              Use Hint (-10 XP)
+            </button>
+          ) : (
+            <div className="text-sm font-medium text-amber-600 px-4 py-2">
+              Hint Used (-10 XP)
+            </div>
+          )}
           <button
             onClick={handleCheckAnswer}
             disabled={!selectedOption}

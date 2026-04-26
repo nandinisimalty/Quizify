@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
 
 export const AuthContext = createContext();
 
@@ -16,25 +17,42 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    let userUnsubscribe = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // We need to import getUserDetails properly
-        try {
-          // Dynamic import to avoid circular dependencies or loading issues before auth
-          const { getUserDetails } = await import('../services/auth');
-          const data = await getUserDetails(user.uid);
-          setUserData(data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+        if (db) {
+          const userDocRef = doc(db, 'users', user.uid);
+          userUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              setUserData({ userId: docSnap.id, ...docSnap.data() });
+            }
+          });
+        } else {
+          // Fallback if db is not available
+          try {
+            const { getUserDetails } = await import('../services/auth');
+            const data = await getUserDetails(user.uid);
+            setUserData(data);
+          } catch (error) {
+            console.error("Error fetching user data:", error);
+          }
         }
       } else {
         setUserData(null);
+        if (userUnsubscribe) {
+          userUnsubscribe();
+          userUnsubscribe = null;
+        }
       }
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (userUnsubscribe) userUnsubscribe();
+    };
   }, []);
 
   const value = {

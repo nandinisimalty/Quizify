@@ -38,40 +38,13 @@ export const loginUser = async (email, password) => {
   if (!auth) throw new Error("Firebase not initialized");
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
   
-  // Update last login date for streak checking
   try {
-    const today = new Date().toISOString().split('T')[0];
     const userDocRef = doc(db, 'users', userCredential.user.uid);
-    const docSnap = await getDoc(userDocRef);
-    
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      const lastLogin = data.lastLoginDate?.split('T')[0];
-      
-      let newStreak = data.currentStreak || 0;
-      
-      if (lastLogin) {
-        const lastDate = new Date(lastLogin);
-        const currentDate = new Date(today);
-        const diffTime = Math.abs(currentDate - lastDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 1) {
-          newStreak += 1;
-        } else if (diffDays > 1) {
-          newStreak = 1; // reset streak
-        }
-      } else {
-         newStreak = 1;
-      }
-      
-      await setDoc(userDocRef, { 
-        lastLoginDate: new Date().toISOString(),
-        currentStreak: newStreak
-      }, { merge: true });
-    }
+    await setDoc(userDocRef, { 
+      lastLoginDate: new Date().toISOString()
+    }, { merge: true });
   } catch (err) {
-    console.error("Error updating streak:", err);
+    console.error("Error updating last login:", err);
   }
 
   return userCredential.user;

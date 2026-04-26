@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../services/firebase';
-import { collection, query, where, getDocs, orderBy, limit, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { 
   PlusCircle, 
   FileText, 
@@ -17,7 +17,8 @@ import {
   Zap,
   Star,
   Medal,
-  Trash2
+  Trash2,
+  XCircle
 } from 'lucide-react';
 
 export default function DashboardHome() {
@@ -28,6 +29,20 @@ export default function DashboardHome() {
   const [recentAttempts, setRecentAttempts] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bonusData, setBonusData] = useState(null);
+
+  useEffect(() => {
+    if (userData?.userId && db) {
+      import('../services/userLogic').then(({ processUserActivity }) => {
+        processUserActivity(userData.userId, db).then(result => {
+           if (result && (result.dailyBonus > 0 || result.streakBonus > 0)) {
+             setBonusData(result);
+             setTimeout(() => setBonusData(null), 5000); // Auto dismiss
+           }
+        });
+      });
+    }
+  }, [userData?.userId]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -128,6 +143,11 @@ export default function DashboardHome() {
       );
       await Promise.all(deletePromises);
       
+      await updateDoc(doc(db, 'users', userData.userId), {
+        xpPoints: 0,
+        level: 1
+      });
+      
       setRecentAttempts([]);
       window.location.reload();
     } catch (error) {
@@ -140,9 +160,23 @@ export default function DashboardHome() {
 
   const currentLevel = userData?.level || 1;
   const currentXP = userData?.xpPoints || 0;
-  // Let's say each level requires 100 XP
-  const xpForNextLevel = currentLevel * 100;
-  const progressPercent = Math.min(100, (currentXP % 100) / 100 * 100);
+  
+  const getLevelThresholds = (level) => {
+    if (level === 1) return { min: 0, max: 100 };
+    if (level === 2) return { min: 100, max: 250 };
+    if (level === 3) return { min: 250, max: 500 };
+    if (level === 4) return { min: 500, max: 1000 };
+    return { min: 1000, max: 1000 };
+  };
+
+  const thresholds = getLevelThresholds(currentLevel);
+  let progressPercent = 100;
+  
+  if (currentLevel < 5) {
+    const levelRange = thresholds.max - thresholds.min;
+    const xpInCurrentLevel = currentXP - thresholds.min;
+    progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / levelRange) * 100));
+  }
 
   const uiAttempts = recentAttempts.slice(0, 5);
   const avgScore = recentAttempts.length > 0 
@@ -165,28 +199,30 @@ export default function DashboardHome() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-fade-in-up pb-12">
       {/* Welcome & Level Progress Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-3xl p-8 text-white shadow-lg overflow-hidden relative">
+      <div className="bg-gradient-to-r from-primary-100 to-primary-200 rounded-3xl p-8 text-primary-900 shadow-sm border border-primary-100 overflow-hidden relative">
         <div className="absolute top-0 right-0 -translate-y-12 translate-x-8 opacity-20">
-          <Trophy className="w-64 h-64" />
+          <Trophy className="w-64 h-64 text-primary-500" />
         </div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex-1 w-full">
-            <h1 className="text-3xl font-extrabold mb-2 text-white drop-shadow-sm">Welcome back, {userData?.name?.split(' ')[0] || 'Student'}! 👋</h1>
-            <p className="text-primary-100 text-lg mb-6">You're on a {userData?.currentStreak || 1} day learning streak! 🔥</p>
+            <h1 className="text-3xl font-extrabold mb-2 text-primary-900 drop-shadow-sm">Welcome back, {userData?.name?.split(' ')[0] || 'Student'}! 👋</h1>
+            <p className="text-primary-700 text-lg mb-6">You're on a {userData?.currentStreak || 1} day learning streak! 🔥</p>
             
             {/* XP Bar */}
-            <div className="bg-white/10 p-5 rounded-2xl backdrop-blur-md border border-white/20">
+            <div className="bg-white/50 p-5 rounded-2xl backdrop-blur-md border border-white/40">
               <div className="flex justify-between items-end mb-2">
                 <div>
-                  <p className="text-sm font-bold text-primary-100 uppercase tracking-wider mb-1">Current Level</p>
+                  <p className="text-sm font-bold text-primary-700 uppercase tracking-wider mb-1">Current Level</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-white">{currentLevel}</span>
-                    <span className="text-primary-200 font-medium">({currentXP} Total XP)</span>
+                    <span className="text-3xl font-extrabold text-primary-900">{currentLevel}</span>
+                    <span className="text-primary-600 font-medium">({currentXP} Total XP)</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold text-white">{currentXP % 100} / 100 XP</span>
-                  <p className="text-xs text-primary-200">to Level {currentLevel + 1}</p>
+                  <span className="text-sm font-bold text-primary-900">
+                    {currentLevel < 5 ? `${currentXP} / ${thresholds.max} XP` : `${currentXP} XP (Max Level)`}
+                  </span>
+                  {currentLevel < 5 && <p className="text-xs text-primary-600">to Level {currentLevel + 1}</p>}
                 </div>
               </div>
               <div className="w-full h-3 bg-primary-900/50 rounded-full overflow-hidden">
@@ -198,12 +234,27 @@ export default function DashboardHome() {
             </div>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-md px-8 py-6 rounded-2xl border border-white/20 text-center shrink-0">
-             <p className="text-sm font-bold text-primary-100 uppercase tracking-wider mb-2">Daily Streak</p>
-             <div className="flex items-center justify-center gap-3">
-               <span className="text-6xl font-extrabold text-white drop-shadow-md">{userData?.currentStreak || 1}</span>
+          <div className="bg-white/50 backdrop-blur-md px-8 py-6 rounded-2xl border border-white/40 text-center shrink-0">
+             <p className="text-sm font-bold text-primary-700 uppercase tracking-wider mb-2">Daily Streak</p>
+             <div className="flex items-center justify-center gap-3 mb-4">
+               <span className="text-6xl font-extrabold text-primary-900 drop-shadow-md">{userData?.currentStreak || 1}</span>
                <span className="text-4xl animate-bounce">🔥</span>
              </div>
+             <div className="flex gap-1.5 justify-center mb-2">
+               {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+                 const currentStreak = userData?.currentStreak || 1;
+                 const effectiveDays = currentStreak % 7 === 0 && currentStreak > 0 ? 7 : currentStreak % 7;
+                 const isActive = day <= effectiveDays;
+                 return (
+                   <div key={day} className={`w-6 h-6 rounded-full flex items-center justify-center ${isActive ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)]' : 'bg-primary-200/50'}`}>
+                     <span className={`text-[10px] ${isActive ? 'opacity-100' : 'opacity-30 grayscale'}`}>🔥</span>
+                   </div>
+                 );
+               })}
+             </div>
+             <p className="text-xs text-primary-700 mt-2 font-medium">
+                You're on a {userData?.currentStreak || 1}-day streak
+             </p>
           </div>
         </div>
       </div>
@@ -423,6 +474,32 @@ export default function DashboardHome() {
 
         </div>
       </div>
+
+      {/* Bonus Popups */}
+      {bonusData && (
+        <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 pointer-events-none">
+          {bonusData.dailyBonus > 0 && (
+            <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up pointer-events-auto">
+              <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900">+{bonusData.dailyBonus} XP Daily Bonus</h4>
+              </div>
+            </div>
+          )}
+          {bonusData.streakBonus > 0 && (
+            <div className="bg-white border border-orange-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up delay-100 pointer-events-auto">
+              <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-lg">
+                🔥
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900">{bonusData.newStreak} Day Streak! +{bonusData.streakBonus} XP</h4>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

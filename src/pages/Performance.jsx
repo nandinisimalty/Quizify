@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line
 } from 'recharts';
-import { Trophy, Star, Target, TrendingUp, Award, Zap } from 'lucide-react';
+import { Trophy, Star, Target, TrendingUp, Award, Zap, Clock, BookOpen } from 'lucide-react';
 
 export default function Performance() {
   const { currentUser, userData } = useAuth();
@@ -14,37 +14,28 @@ export default function Performance() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAttempts = async () => {
-      if (!currentUser || !db) return setLoading(false);
-      
-      try {
-        const q = query(
-          collection(db, 'attempts'),
-          where('userId', '==', currentUser.uid),
-          orderBy('timestamp', 'asc')
-        );
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Mock data if empty for demonstration
-        if (data.length === 0) {
-          setAttempts([
-            { topic: 'History', score: 60, timestamp: '2023-10-01T10:00:00Z' },
-            { topic: 'Science', score: 80, timestamp: '2023-10-02T10:00:00Z' },
-            { topic: 'Math', score: 75, timestamp: '2023-10-05T10:00:00Z' },
-            { topic: 'History', score: 90, timestamp: '2023-10-08T10:00:00Z' },
-          ]);
-        } else {
-          setAttempts(data);
-        }
-      } catch (error) {
-        console.error("Error fetching attempts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!currentUser || !db) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    const q = query(
+      collection(db, 'attempts'),
+      where('userId', '==', currentUser.uid),
+      orderBy('timestamp', 'asc')
+    );
 
-    fetchAttempts();
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAttempts(data);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching attempts:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [currentUser]);
 
   if (loading) {
@@ -74,10 +65,36 @@ export default function Performance() {
     score: a.score
   }));
 
+  const currentLevel = userData?.level || 1;
+  const currentXP = userData?.xpPoints || 0;
+  
+  const getLevelThresholds = (level) => {
+    if (level === 1) return { min: 0, max: 100 };
+    if (level === 2) return { min: 100, max: 250 };
+    if (level === 3) return { min: 250, max: 500 };
+    if (level === 4) return { min: 500, max: 1000 };
+    return { min: 1000, max: 1000 };
+  };
+
+  const thresholds = getLevelThresholds(currentLevel);
+  let progressPercent = 100;
+  if (currentLevel < 5) {
+    const levelRange = thresholds.max - thresholds.min;
+    const xpInCurrentLevel = currentXP - thresholds.min;
+    progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / levelRange) * 100));
+  }
+
+  const hasFirstQuiz = totalQuizzes > 0;
+  const hasPerfectScore = attempts.some(a => a.score === 100);
+  const hasWeeklyStreak = (userData?.currentStreak || 0) >= 7;
+  const isDedicated = (userData?.level || 1) >= 5;
+
   const badges = [
-    { name: 'First Quiz', icon: Star, color: 'text-amber-500', bg: 'bg-amber-100', earned: totalQuizzes > 0 },
-    { name: 'Perfect Score', icon: Award, color: 'text-emerald-500', bg: 'bg-emerald-100', earned: attempts.some(a => a.score === 100) },
-    { name: 'Quiz Master (10+)', icon: Zap, color: 'text-purple-500', bg: 'bg-purple-100', earned: totalQuizzes >= 10 },
+    { name: 'First Steps', icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-100', earned: hasFirstQuiz },
+    { name: 'Perfect 100', icon: Target, color: 'text-emerald-600', bg: 'bg-emerald-100', earned: hasPerfectScore },
+    { name: '7-Day Streak', icon: Clock, color: 'text-coral-600', bg: 'bg-coral-100', earned: hasWeeklyStreak },
+    { name: 'Scholar Lvl 5', icon: Star, color: 'text-purple-600', bg: 'bg-purple-100', earned: isDedicated },
+    { name: 'Quiz Master (10+)', icon: Award, color: 'text-blue-600', bg: 'bg-blue-100', earned: totalQuizzes >= 10 },
   ];
 
   return (
@@ -102,7 +119,7 @@ export default function Performance() {
               <h2 className="text-4xl font-extrabold text-white mb-2">Level {userData?.level || 1} Scholar</h2>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium backdrop-blur-sm border border-white/10">
-                  {userData?.xpPoints || 0} Total XP
+                  {currentXP} Total XP
                 </span>
               </div>
             </div>
@@ -110,13 +127,13 @@ export default function Performance() {
           
           <div className="w-full md:w-1/3 bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10">
             <div className="flex justify-between text-sm mb-2 font-medium text-indigo-100">
-              <span>Progress to level { (userData?.level || 1) + 1}</span>
-              <span>{(userData?.xpPoints || 0) % 100} / 100 XP</span>
+              <span>{currentLevel < 5 ? `Progress to level ${currentLevel + 1}` : 'Max Level Reached'}</span>
+              <span>{currentLevel < 5 ? `${currentXP} / ${thresholds.max} XP` : `${currentXP} XP`}</span>
             </div>
             <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]" 
-                style={{ width: `${(userData?.xpPoints || 0) % 100}%` }}
+                className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] transition-all duration-1000 ease-out" 
+                style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
           </div>
@@ -161,25 +178,32 @@ export default function Performance() {
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Score Timeline</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={progressData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  cursor={{stroke: '#e5e7eb', strokeWidth: 2, strokeDasharray: '3 3'}}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="score" 
-                  stroke="var(--color-primary-500)" 
-                  strokeWidth={4}
-                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                  activeDot={{ r: 6, fill: 'var(--color-primary-500)' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {progressData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={progressData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{stroke: '#e5e7eb', strokeWidth: 2, strokeDasharray: '3 3'}}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="score" 
+                    stroke="var(--color-primary-500)" 
+                    strokeWidth={4}
+                    dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                    activeDot={{ r: 6, fill: 'var(--color-primary-500)' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <TrendingUp className="w-12 h-12 mb-2 opacity-50" />
+                <p className="text-sm font-medium">Take quizzes to see your timeline!</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -187,18 +211,25 @@ export default function Performance() {
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-6">Subject Performance</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topicData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                <Tooltip 
-                  cursor={{fill: '#f9fafb'}}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="score" fill="var(--color-primary-500)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {topicData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topicData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
+                  <Tooltip 
+                    cursor={{fill: '#f9fafb'}}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="score" fill="var(--color-primary-500)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <BookOpen className="w-12 h-12 mb-2 opacity-50" />
+                <p className="text-sm font-medium">No subject data available yet.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

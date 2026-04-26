@@ -1,130 +1,149 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, FileText, CheckCircle2, TrendingUp, Presentation } from 'lucide-react';
-import Mascot from '../components/Mascot';
+import { FileText, TrendingUp, Activity, Target, Presentation } from 'lucide-react';
 import { db } from '../services/firebase';
-import { collection, query, where, getDocs, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 export default function TeacherHome() {
   const { currentUser, userData } = useAuth();
   
-  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalAttempts, setTotalAttempts] = useState(0);
   const [quizzesCreated, setQuizzesCreated] = useState(0);
   const [avgScore, setAvgScore] = useState(0);
+  const [recentAttempts, setRecentAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTeacherStats = async () => {
-      if (!currentUser || !db) return setLoading(false);
-      
-      try {
-        // 1. Total Students Profile Query
-        const studentsQuery = query(collection(db, 'users'), where('role', '==', 'student'));
-        const studentsSnapshot = await getCountFromServer(studentsQuery);
-        setTotalStudents(studentsSnapshot.data().count);
+    if (!currentUser || !db) return;
 
-        // 2. Quizzes Created Query
-        const quizzesQuery = query(collection(db, 'quizzes'), where('createdBy', '==', currentUser.uid));
-        const quizzesDocs = await getDocs(quizzesQuery);
-        setQuizzesCreated(quizzesDocs.size);
+    let quizzesMap = {};
+    let attemptsList = [];
+    let unsubQuizzes, unsubAttempts;
+
+    const computeStats = () => {
+      let totalScore = 0;
+      let attemptCount = 0;
+      const recentList = [];
+
+      attemptsList.forEach(attempt => {
+        const quiz = quizzesMap[attempt.quizId];
         
-        // Extract quiz IDs to fetch attempts for these specific quizzes
-        const quizIds = quizzesDocs.docs.map(doc => doc.id);
-
-        // 3. Average Class Score
-        if (quizIds.length > 0) {
-          // Note: Firestore 'in' queries support up to 10 array items. Limit or batch for large scale.
-          // For simplicity in this intermediate version, we'll fetch all attempts and filter, 
-          // or chunk queries if there are many quizzes.
-          let totalScore = 0;
-          let attemptCount = 0;
-          
-          // Chunk quizIds into arrays of 10 to respect Firestore 'in' limits
-          for (let i = 0; i < quizIds.length; i += 10) {
-            const chunk = quizIds.slice(i, i + 10);
-            const attemptsQuery = query(collection(db, 'attempts'), where('quizId', 'in', chunk));
-            const attemptsDocs = await getDocs(attemptsQuery);
-            
-            attemptsDocs.forEach(doc => {
-              totalScore += doc.data().score || 0;
-              attemptCount++;
-            });
-          }
-
-          if (attemptCount > 0) {
-            setAvgScore(Math.round(totalScore / attemptCount));
-          } else {
-            setAvgScore(0);
-          }
-        } else {
-          setAvgScore(0);
+        if (quiz) {
+          attemptCount++;
+          totalScore += attempt.score;
+          recentList.push({
+            id: attempt.id,
+            studentName: attempt.studentName || 'Unknown Student',
+            quizTitle: quiz.title,
+            score: attempt.score,
+            completedAt: attempt.completedAt || attempt.timestamp || new Date().toISOString()
+          });
         }
+      });
 
-      } catch (error) {
-        console.error("Error fetching teacher stats:", error);
-      } finally {
-        setLoading(false);
-      }
+      recentList.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+      setRecentAttempts(recentList.slice(0, 5)); // Top 5 recent
+
+      setQuizzesCreated(Object.keys(quizzesMap).length);
+      setTotalAttempts(attemptCount);
+      setAvgScore(attemptCount > 0 ? Math.round(totalScore / attemptCount) : 0);
+      setLoading(false);
     };
 
-    fetchTeacherStats();
+    unsubQuizzes = onSnapshot(query(collection(db, 'quizzes'), where('createdBy', '==', currentUser.uid)), (snap) => {
+      const newQuizzesMap = {};
+      snap.forEach(doc => { newQuizzesMap[doc.id] = { id: doc.id, ...doc.data() }; });
+      quizzesMap = newQuizzesMap;
+      computeStats();
+    });
+
+    unsubAttempts = onSnapshot(collection(db, 'attempts'), (snap) => {
+      attemptsList = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      computeStats();
+    });
+
+    return () => {
+      unsubQuizzes();
+      unsubAttempts();
+    };
   }, [currentUser]);
 
   const stats = [
-    { label: 'Total Students', value: loading ? '...' : totalStudents.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Quizzes Created', value: loading ? '...' : quizzesCreated.toString(), icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { label: 'Avg Class Score', value: loading ? '...' : `${avgScore}%`, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: 'Total Quizzes Created', value: loading ? '...' : quizzesCreated.toString(), icon: FileText, color: 'text-primary-600', bg: 'bg-primary-50' },
+    { label: 'Total Attempts', value: loading ? '...' : totalAttempts.toString(), icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Average Score', value: loading ? '...' : `${avgScore}%`, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in-up pb-10">
+    <div className="max-w-6xl mx-auto space-y-8 pb-10">
       
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-secondary-500 to-secondary-600 rounded-3xl p-8 text-white shadow-xl overflow-hidden relative flex flex-col md:flex-row items-center gap-8 justify-between border-b-4 border-secondary-700">
-        <div className="absolute top-0 right-0 opacity-10 translate-x-12 -translate-y-12">
-          <Presentation className="w-96 h-96" />
-        </div>
-        
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-sm font-bold mb-4 shadow-sm">
-            <CheckCircle2 className="w-4 h-4" />
-            Teacher Dashboard
-          </div>
-          <h1 className="text-4xl font-extrabold mb-2">Welcome back, {userData?.post || 'Teacher'} {userData?.name?.split(' ')[0]}! 📚</h1>
-          <p className="text-secondary-100 text-lg">
-            Teaching {userData?.subjects?.join(', ') || 'various subjects'}. Ready to inspire your students today?
-          </p>
-        </div>
-
-        <div className="relative z-10 bg-white/10 p-4 rounded-full backdrop-blur-md border border-white/20">
-           <Mascot mood="happy" size="lg" />
-        </div>
+      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Welcome back, {userData?.name || 'Teacher'}! 👋</h1>
+        <p className="text-gray-500 text-lg">
+          Here's an overview of your quizzes and student performance.
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border-2 border-gray-100 flex items-center gap-5 hover:border-secondary-300 hover:shadow-md transition-all group card-bouncy">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${stat.bg}`}>
-              <stat.icon className={`w-8 h-8 ${stat.color}`} />
+          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg}`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500 mb-1">{stat.label}</p>
-              <h3 className="text-4xl font-extrabold text-gray-900">{stat.value}</h3>
+              <p className="text-sm font-bold text-gray-500 mb-1 tracking-wide">{stat.label}</p>
+              <h3 className="text-3xl font-extrabold text-gray-900">{stat.value}</h3>
             </div>
           </div>
         ))}
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-3xl border-2 border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-          <h3 className="font-extrabold text-xl text-gray-900">Recent Class Activity</h3>
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col mt-8">
+        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+             <TrendingUp className="w-5 h-5 text-primary-500" />
+             Recent Class Activity
+          </h3>
         </div>
-        <div className="p-8 text-center">
-          <p className="text-gray-500">Analytics tracking will appear here as students complete your assigned quizzes.</p>
+        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+          {loading ? (
+             <div className="p-8 text-center text-gray-500 h-full flex items-center justify-center">
+               <p className="font-medium text-sm">Loading activity...</p>
+             </div>
+          ) : recentAttempts.length === 0 ? (
+             <div className="p-8 text-center text-gray-500 h-full flex flex-col items-center justify-center">
+               <Presentation className="w-10 h-10 mb-3 text-primary-200" />
+               <p className="font-medium text-sm">No attempts yet. Your students haven't played any quizzes.</p>
+             </div>
+          ) : (
+            recentAttempts.map((attempt) => (
+              <div key={attempt.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                    <Target className="w-5 h-5 text-primary-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-gray-900">{attempt.studentName}</h4>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">Completed: {attempt.quizTitle}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold ${
+                    attempt.score >= 80 ? 'bg-emerald-50 text-emerald-700' : 
+                    attempt.score >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                  }`}>
+                    {attempt.score}%
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
+
     </div>
   );
 }
