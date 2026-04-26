@@ -75,12 +75,12 @@ export default function TeacherHome() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-10">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-10 px-4 md:px-0">
       
       {/* Welcome Banner */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col justify-center">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Welcome back, {userData?.name || 'Teacher'}! 👋</h1>
-        <p className="text-gray-500 text-lg">
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col justify-center">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">Welcome back, {userData?.name || 'Teacher'}! 👋</h1>
+        <p className="text-gray-500 text-base md:text-lg">
           Here's an overview of your quizzes and student performance.
         </p>
       </div>
@@ -88,21 +88,21 @@ export default function TeacherHome() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+          <div key={i} className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg}`}>
               <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500 mb-1 tracking-wide">{stat.label}</p>
-              <h3 className="text-3xl font-extrabold text-gray-900">{stat.value}</h3>
+              <p className="text-xs font-bold text-gray-500 mb-1 tracking-wide uppercase">{stat.label}</p>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">{stat.value}</h3>
             </div>
           </div>
         ))}
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col mt-8">
-        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col mt-4 md:mt-8">
+        <div className="px-4 py-4 md:px-6 md:py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
              <TrendingUp className="w-5 h-5 text-primary-500" />
              Recent Class Activity
@@ -120,7 +120,7 @@ export default function TeacherHome() {
              </div>
           ) : (
             recentAttempts.map((attempt) => (
-              <div key={attempt.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+              <div key={attempt.id} className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
                     <Target className="w-5 h-5 text-primary-400" />

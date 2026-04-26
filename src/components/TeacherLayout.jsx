@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logoutUser } from '../services/auth';
@@ -7,13 +8,15 @@ import {
   FileText, 
   LogOut, 
   BookOpen,
-  Briefcase
+  Briefcase,
+  Menu
 } from 'lucide-react';
 
 export default function TeacherLayout() {
   const { userData } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -31,11 +34,24 @@ export default function TeacherLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden relative">
+      
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-surface border-r border-gray-200 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <Link to="/teacher-dashboard" className="flex items-center gap-2">
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out md:static md:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="h-16 flex items-center px-6 border-b border-gray-200 shrink-0">
+          <Link to="/teacher-dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
             <div className="bg-primary-500 p-1.5 rounded-lg">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
@@ -50,6 +66,7 @@ export default function TeacherLayout() {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive 
                     ? 'bg-primary-50 text-primary-700' 
@@ -63,7 +80,7 @@ export default function TeacherLayout() {
           })}
         </div>
         
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 shrink-0">
           <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-gray-50">
             <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold shrink-0">
               {userData?.name?.charAt(0) || 'T'}
@@ -83,12 +100,31 @@ export default function TeacherLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-8">
+      {/* Main Content Wrapper */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0">
+        
+        {/* Mobile Top Header */}
+        <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-4 md:hidden shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary-500 p-1.5 rounded-lg">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-lg text-gray-900">Quizify</span>
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </header>
+
+        {/* Scrollable Page Content */}
+        <main className="flex-1 overflow-y-auto w-full p-4 md:p-8">
           <Outlet />
-        </div>
-      </main>
+        </main>
+
+      </div>
     </div>
   );
 }

@@ -153,7 +153,7 @@ export default function QuizPlayer() {
     const finalPercentage = Math.round((score / quiz.questions.length) * 100);
     
     return (
-      <div className="max-w-3xl mx-auto py-8 animate-fade-in-up relative">
+      <div className="max-w-3xl mx-auto py-6 md:py-8 px-4 md:px-0 animate-fade-in-up relative">
         {/* Level Up Popup overlay */}
         {leveledUpTo && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
@@ -199,21 +199,21 @@ export default function QuizPlayer() {
           </div>
         )}
 
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-100 mb-6">
-            <Trophy className="w-12 h-12 text-primary-600" />
+        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary-100 mb-6">
+            <Trophy className="w-10 h-10 md:w-12 md:h-12 text-primary-600" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
           <p className="text-gray-500 mb-2">You scored {score} out of {quiz.questions.length} ({finalPercentage}%)</p>
           <div className="inline-block bg-primary-50 text-primary-700 font-bold px-4 py-2 rounded-xl mb-8 border border-primary-100">
             +{earnedXp} XP Earned
           </div>
           
-          <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={() => navigate('/dashboard')} className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+            <button onClick={() => navigate('/dashboard')} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors">
               Back to Dashboard
             </button>
-            <button onClick={() => navigate('/dashboard/generate')} className="px-6 py-3 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
+            <button onClick={() => navigate('/dashboard/generate')} className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
               Generate Another Quiz
             </button>
           </div>
@@ -258,11 +258,11 @@ export default function QuizPlayer() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-3xl mx-auto py-6 md:py-8 px-4 md:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{quiz.topic}</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{quiz.topic}</h2>
           <p className="text-gray-500 text-sm">Question {currentQuestionIndex + 1} of {quiz.questions.length}</p>
         </div>
         <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium ${timeLeft < 60 ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600'}`}>
@@ -280,8 +280,8 @@ export default function QuizPlayer() {
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mb-6">
-        <h3 className="text-xl font-medium text-gray-900 mb-8 leading-relaxed">
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 mb-6">
+        <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-6 md:mb-8 leading-relaxed">
           {currentQuestion.question}
         </h3>
 
@@ -306,7 +306,7 @@ export default function QuizPlayer() {
                 key={idx}
                 onClick={() => handleOptionSelect(option)}
                 disabled={isAnswerSubmitted}
-                className={`w-full text-left px-6 py-4 rounded-xl border-2 transition-all font-medium ${stateClass}`}
+                className={`w-full text-left px-4 py-3 md:px-6 md:py-4 rounded-xl border-2 transition-all font-medium ${stateClass}`}
               >
                 <div className="flex items-center justify-between">
                   <span>{option}</span>
@@ -339,7 +339,7 @@ export default function QuizPlayer() {
           <div className="flex justify-end">
             <button
               onClick={handleNextQuestion}
-              className="px-8 py-4 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
             >
               {currentQuestionIndex < quiz.questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
               <ArrowRight className="w-5 h-5" />
@@ -366,7 +366,7 @@ export default function QuizPlayer() {
           <button
             onClick={handleCheckAnswer}
             disabled={!selectedOption}
-            className="px-8 py-3 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-2.5 md:py-3 md:px-8 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Answer
           </button>

@@ -197,15 +197,17 @@ export default function DashboardHome() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in-up pb-12">
-      {/* Welcome & Level Progress Section */}
-      <div className="bg-gradient-to-r from-primary-100 to-primary-200 rounded-3xl p-8 text-primary-900 shadow-sm border border-primary-100 overflow-hidden relative">
-        <div className="absolute top-0 right-0 -translate-y-12 translate-x-8 opacity-20">
-          <Trophy className="w-64 h-64 text-primary-500" />
+    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 pb-12">
+      {/* Hero Banner */}
+      <div className="relative bg-gradient-to-r from-primary-100 to-primary-200 rounded-3xl p-6 md:p-10 overflow-hidden shadow-sm border border-primary-200/50">
+        <div className="absolute top-0 right-0 -translate-y-12 translate-x-8 opacity-10">
+          <Trophy className="w-48 h-48 md:w-64 md:h-64 text-primary-900" />
         </div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex-1 w-full">
-            <h1 className="text-3xl font-extrabold mb-2 text-primary-900 drop-shadow-sm">Welcome back, {userData?.name?.split(' ')[0] || 'Student'}! 👋</h1>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-xl text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-primary-900 mb-2 md:mb-4 tracking-tight">
+              Welcome back, {userData?.name?.split(' ')[0] || 'Student'}!
+            </h1>
             <p className="text-primary-700 text-lg mb-6">You're on a {userData?.currentStreak || 1} day learning streak! 🔥</p>
             
             {/* XP Bar */}
@@ -252,17 +254,13 @@ export default function DashboardHome() {
                  );
                })}
              </div>
-             <p className="text-xs text-primary-700 mt-2 font-medium">
-                You're on a {userData?.currentStreak || 1}-day streak
-             </p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Self Study Tools</h2>
       <div className="grid md:grid-cols-3 gap-6">
-        <Link to="/dashboard/generate" className="group bg-white p-6 rounded-2xl border-2 border-transparent shadow-sm hover:shadow-lg hover:border-primary-300 transition-all flex break-inside-avoid btn-bouncy">
+        <Link to="/dashboard/generate" className="group bg-white p-6 rounded-2xl border-2 border-transparent shadow-sm hover:shadow-lg hover:border-primary-300 transition-all flex btn-bouncy">
           <div className="flex-1">
             <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <PlusCircle className="w-6 h-6 text-primary-600" />
@@ -294,7 +292,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-8 mt-8">
+      <div className="grid lg:grid-cols-3 gap-8">
         
         {/* Left Column (2 spans): Assigned Quizzes & Badges */}
         <div className="lg:col-span-2 space-y-8">
@@ -353,13 +351,6 @@ export default function DashboardHome() {
                             <span className="flex items-center gap-1 text-xs font-bold text-secondary-600 bg-secondary-50 px-2 py-1 rounded-md">
                               <Clock className="w-3 h-3" />
                               Due: {due.toLocaleDateString()}
-                            </span>
-                            <span className={`text-xs font-bold px-2 py-1 rounded-md border ${
-                              quiz.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              quiz.difficulty === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              'bg-rose-50 text-rose-700 border-rose-200'
-                            }`}>
-                              {quiz.difficulty}
                             </span>
                           </div>
                         </div>
@@ -435,14 +426,14 @@ export default function DashboardHome() {
                   className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Clear Data
+                  Clear
                 </button>
               )}
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100 max-h-96">
               {uiAttempts.length === 0 ? (
                  <div className="p-8 text-center text-gray-500 h-full flex items-center justify-center">
-                   <p className="font-medium text-sm">No attempts yet. Play a quiz!</p>
+                   <p className="font-medium text-sm">No attempts yet.</p>
                  </div>
               ) : (
                 uiAttempts.map((attempt) => (

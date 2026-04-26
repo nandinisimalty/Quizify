@@ -73,7 +73,7 @@ export default function Signup() {
             <BookOpen className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-4xl font-extrabold text-gray-900 tracking-tight">
+        <h2 className="mt-6 text-center text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
           Join Quizify
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
@@ -82,7 +82,7 @@ export default function Signup() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-3xl sm:px-10 border border-gray-100">
+        <div className="bg-white py-6 px-4 md:py-8 shadow-xl sm:rounded-3xl sm:px-10 border border-gray-100">
           
           {/* Step Indicators */}
           <div className="flex justify-center mb-8">
@@ -109,7 +109,7 @@ export default function Signup() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-2 appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-gray-50"
+                  className="mt-2 appearance-none block w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-gray-50"
                   placeholder="John Doe"
                 />
               </div>
@@ -123,7 +123,7 @@ export default function Signup() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-2 appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-gray-50"
+                  className="mt-2 appearance-none block w-full px-4 py-2.5 md:py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-gray-50"
                   placeholder="you@example.com"
                 />
               </div>
@@ -157,7 +157,7 @@ export default function Signup() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-200 btn-bouncy"
+                  className="w-full flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-200 btn-bouncy"
                 >
                   Continue
                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -207,7 +207,7 @@ export default function Signup() {
                       required
                       value={post}
                       onChange={(e) => setPost(e.target.value)}
-                      className="mt-2 appearance-none block w-full px-4 py-3 border border-secondary-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-all bg-white"
+                      className="mt-2 appearance-none block w-full px-4 py-2.5 md:py-3 border border-secondary-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-all bg-white"
                       placeholder="e.g. High School Science Teacher, Professor"
                     />
                   </div>
@@ -220,7 +220,7 @@ export default function Signup() {
                       required
                       value={subjectsInput}
                       onChange={(e) => setSubjectsInput(e.target.value)}
-                      className="appearance-none block w-full px-4 py-3 border border-secondary-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-all bg-white"
+                      className="appearance-none block w-full px-4 py-2.5 md:py-3 border border-secondary-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-all bg-white"
                       placeholder="e.g. Math, Physics, Chemistry"
                     />
                   </div>
@@ -231,14 +231,14 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all"
+                  className="px-4 py-2.5 md:py-3 border border-gray-300 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-all"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`flex-1 flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white focus:outline-none focus:ring-4 btn-bouncy disabled:opacity-70 disabled:cursor-not-allowed ${
+                  className={`flex-1 flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white focus:outline-none focus:ring-4 btn-bouncy disabled:opacity-70 disabled:cursor-not-allowed ${
                     role === 'teacher' ? 'bg-secondary-500 hover:bg-secondary-600 focus:ring-secondary-200' : 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-200'
                   }`}
                 >

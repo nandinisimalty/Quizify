@@ -84,27 +84,27 @@ export default function TeacherPerformance() {
   const uniqueQuizTitles = [...new Set(studentsData.map(r => r.quizTitle))];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Class Performance</h1>
-          <p className="text-gray-500 font-medium">Monitor your students' latest quiz attempts in real-time.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Class Performance</h1>
+          <p className="text-gray-500 text-sm md:font-medium">Monitor your students' latest quiz attempts in real-time.</p>
         </div>
       </div>
 
       {!loading && quizSummaries.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Quiz Summaries</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Quiz Summaries</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {quizSummaries.map((summary, index) => (
-              <div key={index} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2">
+              <div key={index} className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2">
                 <h3 className="font-semibold text-gray-800 line-clamp-1" title={summary.title}>{summary.title}</h3>
-                <div className="flex justify-between text-sm mt-2">
-                  <span className="text-gray-500">Total Attempts:</span>
+                <div className="flex justify-between text-xs md:text-sm mt-1 md:mt-2">
+                  <span className="text-gray-500">Attempts:</span>
                   <span className="font-bold text-primary-600">{summary.totalAttempts}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Average Score:</span>
+                <div className="flex justify-between text-xs md:text-sm">
+                  <span className="text-gray-500">Avg Score:</span>
                   <span className="font-bold text-primary-600">{summary.averageScore}%</span>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function TeacherPerformance() {
            </div>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100 font-semibold">
               <tr>
@@ -181,6 +181,42 @@ export default function TeacherPerformance() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary-500" />
+              Loading data...
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <Presentation className="w-10 h-10 mx-auto mb-3 text-primary-200" />
+              No submissions yet.
+            </div>
+          ) : (
+            filteredData.map((record) => (
+              <div key={record.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-gray-900">{record.studentName}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{record.quizTitle}</div>
+                  </div>
+                  <span className={`px-2 py-1 rounded-lg font-bold text-[10px] ${
+                    record.score >= 80 ? 'bg-primary-50 text-primary-700' :
+                    record.score >= 60 ? 'bg-primary-50 text-primary-600' :
+                    'bg-red-50 text-red-700'
+                  }`}>
+                    {record.score}%
+                  </span>
+                </div>
+                <div className="text-[10px] text-gray-400 font-medium">
+                  Completed on {new Date(record.completedAt).toLocaleDateString()} at {new Date(record.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

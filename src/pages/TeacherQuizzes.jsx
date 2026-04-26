@@ -135,19 +135,19 @@ export default function TeacherQuizzes() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Quizzes</h1>
-          <p className="text-gray-500 font-medium">Create AI-generated quizzes and manage assignments.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Manage Quizzes</h1>
+          <p className="text-gray-500 text-sm md:font-medium">Create AI-generated quizzes and manage assignments.</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Create Quiz Form */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 lg:sticky lg:top-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
               <Plus className="w-5 h-5 text-primary-600" />
               Assign New Quiz
             </h2>
@@ -258,7 +258,7 @@ export default function TeacherQuizzes() {
               <h3 className="font-bold text-lg text-gray-900">Your Assigned Quizzes</h3>
             </div>
             
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100 font-semibold">
                   <tr>
@@ -324,6 +324,64 @@ export default function TeacherQuizzes() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {loading && quizzes.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary-500" />
+                  Loading quizzes...
+                </div>
+              ) : quizzes.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <FileText className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                  No quizzes yet.
+                </div>
+              ) : (
+                quizzes.map((quiz) => {
+                  const due = new Date(quiz.dueDate);
+                  const isPastDue = due < new Date();
+                  return (
+                    <div key={quiz.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-gray-900">{quiz.title}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {quiz.questions?.length || 0} Questions • {quiz.difficulty}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          className="p-2 text-red-600 bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 pt-1">
+                        <div className="bg-gray-50 p-2.5 rounded-xl">
+                          <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-tight">Due Date</p>
+                          <span className={`text-xs font-bold ${isPastDue ? 'text-red-500' : 'text-gray-700'}`}>
+                            {due.toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="bg-gray-50 p-2.5 rounded-xl">
+                          <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-tight">Avg Score</p>
+                          <span className="text-xs font-bold text-primary-700">{quiz.averageScore}%</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-primary-50/50 p-2.5 rounded-xl">
+                        <span className="text-xs font-bold text-primary-700">Total Attempts</span>
+                        <span className="text-xs font-bold text-primary-900 bg-primary-100 px-2 py-0.5 rounded-full">
+                          {quiz.totalAttempts}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

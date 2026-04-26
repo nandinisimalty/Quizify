@@ -98,27 +98,27 @@ export default function Performance() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in-up pb-12">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
       <div className="mb-2">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Performance & Analytics</h1>
-        <p className="text-gray-500">Track your learning progress and view your achievements.</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 tracking-tight">Performance & Analytics</h1>
+        <p className="text-gray-500 text-sm md:text-base">Track your learning progress and view your achievements.</p>
       </div>
 
       {/* Gamification Header */}
-      <div className="bg-gradient-to-r from-indigo-900 to-primary-900 rounded-3xl p-8 text-white shadow-xl overflow-hidden relative">
+      <div className="bg-gradient-to-r from-indigo-900 to-primary-900 rounded-3xl p-6 md:p-8 text-white shadow-xl overflow-hidden relative">
         <div className="absolute top-0 right-0 opacity-10 translate-x-12 -translate-y-12">
-          <Trophy className="w-96 h-96" />
+          <Trophy className="w-64 h-64 md:w-96 md:h-96" />
         </div>
-        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20 shadow-inner">
-              <span className="text-4xl font-bold text-white">{userData?.level || 1}</span>
+        <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center justify-between">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="w-20 h-20 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20 shadow-inner">
+              <span className="text-3xl md:text-4xl font-bold text-white">{userData?.level || 1}</span>
             </div>
             <div>
-              <p className="text-indigo-200 font-medium tracking-wide uppercase text-sm mb-1">Current Level</p>
-              <h2 className="text-4xl font-extrabold text-white mb-2">Level {userData?.level || 1} Scholar</h2>
+              <p className="text-indigo-200 font-medium tracking-wide uppercase text-[10px] md:text-sm mb-1">Current Level</p>
+              <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-2">Level {userData?.level || 1} Scholar</h2>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium backdrop-blur-sm border border-white/10">
+                <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] md:text-xs font-medium backdrop-blur-sm border border-white/10">
                   {currentXP} Total XP
                 </span>
               </div>
@@ -141,34 +141,34 @@ export default function Performance() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Target className="w-7 h-7" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Target className="w-6 h-6 md:w-7 md:h-7" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Total Quizzes</p>
-            <h3 className="text-3xl font-bold text-gray-900">{totalQuizzes}</h3>
+            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Total Quizzes</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{totalQuizzes}</h3>
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <TrendingUp className="w-7 h-7" />
+        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <TrendingUp className="w-6 h-6 md:w-7 md:h-7" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Average Score</p>
-            <h3 className="text-3xl font-bold text-gray-900">{avgScore}%</h3>
+            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Average Score</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{avgScore}%</h3>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
-          <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Star className="w-7 h-7" />
+        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group sm:col-span-2 lg:col-span-1">
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Star className="w-6 h-6 md:w-7 md:h-7" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">Badges Earned</p>
-            <h3 className="text-3xl font-bold text-gray-900">{badges.filter(b => b.earned).length} / {badges.length}</h3>
+            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Badges Earned</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{badges.filter(b => b.earned).length} / {badges.length}</h3>
           </div>
         </div>
       </div>
@@ -235,18 +235,18 @@ export default function Performance() {
       </div>
 
       {/* Badges and Achievements */}
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Achievements</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6">Achievements</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {badges.map((badge, idx) => (
-            <div key={idx} className={`p-6 rounded-2xl flex flex-col items-center text-center transition-all ${
+            <div key={idx} className={`p-4 md:p-6 rounded-2xl flex flex-col items-center text-center transition-all ${
               badge.earned ? 'bg-white border-2 border-primary-100 shadow-sm' : 'bg-gray-50 border-2 border-transparent opacity-60 grayscale'
             }`}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${badge.bg}`}>
-                <badge.icon className={`w-8 h-8 ${badge.color}`} />
+              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-3 md:mb-4 ${badge.bg}`}>
+                <badge.icon className={`w-6 h-6 md:w-8 md:h-8 ${badge.color}`} />
               </div>
-              <h4 className="font-bold text-gray-900 mb-1">{badge.name}</h4>
-              <p className="text-xs text-gray-500">{badge.earned ? 'Unlocked!' : 'Locked'}</p>
+              <h4 className="font-bold text-sm md:text-base text-gray-900 mb-1">{badge.name}</h4>
+              <p className="text-[10px] md:text-xs text-gray-500">{badge.earned ? 'Unlocked!' : 'Locked'}</p>
             </div>
           ))}
         </div>
