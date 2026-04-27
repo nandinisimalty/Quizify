@@ -165,7 +165,7 @@ export default function QuizPlayer() {
               <p className="text-gray-600 mb-6 font-medium text-lg">You reached <span className="text-primary-600 font-bold">Level {leveledUpTo}</span>!</p>
               <button 
                 onClick={() => setLeveledUpTo(null)}
-                className="w-full py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-md btn-bouncy"
+                className="w-full py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-md"
               >
                 Awesome!
               </button>

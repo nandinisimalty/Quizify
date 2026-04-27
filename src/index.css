@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Playful Vibrant Theme */
+  /* Minimal Pastel Theme */
   --color-primary-50: #f5f3ff;
   --color-primary-100: #ede9fe;
   --color-primary-200: #ddd6fe;
@@ -16,25 +16,25 @@
   --color-accent-400: #fb7185;
   --color-accent-500: #f43f5e;
   
-  --color-background: #f8fafc;
+  --color-background: #ffffff;
   --color-surface: #ffffff;
 }
 
 @layer base {
   body {
     background-color: var(--color-background);
-    color: #1e293b;
-    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+    color: #334155;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
-/* Custom utility for bouncy interactions */
+/* Minimal interactions */
 @layer utilities {
-  .btn-bouncy {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:shadow-sm;
+  .btn-minimal {
+    @apply transition-all duration-200 active:scale-[0.98];
   }
-  .card-bouncy {
-    @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl;
+  .card-minimal {
+    @apply transition-all duration-200 hover:border-gray-200;
   }
 }
 
@@ -43,16 +43,9 @@
   to { opacity: 1; }
 }
 
-@keyframes scale-up {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
 @layer utilities {
   .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
-  .animate-scale-up {
-    animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fade-in 0.4s ease-out forwards;
   }
 }
+

@@ -157,7 +157,7 @@ export default function Signup() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-200 btn-bouncy"
+                  className="w-full flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-200"
                 >
                   Continue
                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -238,7 +238,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`flex-1 flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white focus:outline-none focus:ring-4 btn-bouncy disabled:opacity-70 disabled:cursor-not-allowed ${
+                  className={`flex-1 flex justify-center items-center gap-2 py-2.5 md:py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white focus:outline-none focus:ring-4 disabled:opacity-70 disabled:cursor-not-allowed ${
                     role === 'teacher' ? 'bg-secondary-500 hover:bg-secondary-600 focus:ring-secondary-200' : 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-200'
                   }`}
                 >

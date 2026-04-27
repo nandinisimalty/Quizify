@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line
-} from 'recharts';
-import { Trophy, Star, Target, TrendingUp, Award, Zap, Clock, BookOpen } from 'lucide-react';
+import { Trophy, Star, Target, TrendingUp, Award, Zap, Clock, BookOpen, ChevronRight, Activity, BarChart2, Trash2 } from 'lucide-react';
 
 export default function Performance() {
   const { currentUser, userData } = useAuth();
@@ -23,7 +19,7 @@ export default function Performance() {
     const q = query(
       collection(db, 'attempts'),
       where('userId', '==', currentUser.uid),
-      orderBy('timestamp', 'asc')
+      orderBy('timestamp', 'desc')
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -39,218 +35,196 @@ export default function Performance() {
   }, [currentUser]);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading performance data...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Activity className="w-8 h-8 animate-spin text-primary-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Analyzing your progress...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Calculate stats
   const totalQuizzes = attempts.length;
   const avgScore = totalQuizzes > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / totalQuizzes) : 0;
-  
-  // Topic-wise averages
-  const topicStats = {};
-  attempts.forEach(a => {
-    if (!topicStats[a.topic]) topicStats[a.topic] = { total: 0, count: 0 };
-    topicStats[a.topic].total += a.score;
-    topicStats[a.topic].count += 1;
-  });
-  
-  const topicData = Object.keys(topicStats).map(t => ({
-    name: t,
-    score: Math.round(topicStats[t].total / topicStats[t].count)
+  const highestScore = totalQuizzes > 0 ? Math.max(...attempts.map(a => a.score)) : 0;
+
+  // Group by quiz
+  const quizStats = attempts.reduce((acc, attempt) => {
+    const title = attempt.topic || 'Custom Quiz';
+    if (!acc[title]) {
+      acc[title] = { title, count: 0, totalScore: 0 };
+    }
+    acc[title].count += 1;
+    acc[title].totalScore += attempt.score;
+    return acc;
+  }, {});
+
+  const quizWiseData = Object.values(quizStats).map(q => ({
+    ...q,
+    avgScore: Math.round(q.totalScore / q.count)
   }));
 
-  // Progress over time
-  const progressData = attempts.map((a, i) => ({
-    name: `Quiz ${i + 1}`,
-    score: a.score
-  }));
-
-  const currentLevel = userData?.level || 1;
-  const currentXP = userData?.xpPoints || 0;
-  
-  const getLevelThresholds = (level) => {
-    if (level === 1) return { min: 0, max: 100 };
-    if (level === 2) return { min: 100, max: 250 };
-    if (level === 3) return { min: 250, max: 500 };
-    if (level === 4) return { min: 500, max: 1000 };
-    return { min: 1000, max: 1000 };
-  };
-
-  const thresholds = getLevelThresholds(currentLevel);
-  let progressPercent = 100;
-  if (currentLevel < 5) {
-    const levelRange = thresholds.max - thresholds.min;
-    const xpInCurrentLevel = currentXP - thresholds.min;
-    progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / levelRange) * 100));
-  }
-
-  const hasFirstQuiz = totalQuizzes > 0;
-  const hasPerfectScore = attempts.some(a => a.score === 100);
-  const hasWeeklyStreak = (userData?.currentStreak || 0) >= 7;
-  const isDedicated = (userData?.level || 1) >= 5;
-
-  const badges = [
-    { name: 'First Steps', icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-100', earned: hasFirstQuiz },
-    { name: 'Perfect 100', icon: Target, color: 'text-emerald-600', bg: 'bg-emerald-100', earned: hasPerfectScore },
-    { name: '7-Day Streak', icon: Clock, color: 'text-coral-600', bg: 'bg-coral-100', earned: hasWeeklyStreak },
-    { name: 'Scholar Lvl 5', icon: Star, color: 'text-purple-600', bg: 'bg-purple-100', earned: isDedicated },
-    { name: 'Quiz Master (10+)', icon: Award, color: 'text-blue-600', bg: 'bg-blue-100', earned: totalQuizzes >= 10 },
+  const stats = [
+    { label: 'Average Score', value: `${avgScore}%`, icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-50' },
+    { label: 'Quizzes Done', value: totalQuizzes.toString(), icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Highest Score', value: `${highestScore}%`, icon: Trophy, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
+  const handleDeleteAttempt = async (attemptId) => {
+    if (!window.confirm("Are you sure you want to delete this attempt? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'attempts', attemptId));
+      // State is updated automatically via onSnapshot
+    } catch (error) {
+      console.error("Error deleting attempt:", error);
+      alert("Failed to delete attempt. Please try again.");
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-12 px-4 md:px-0">
-      <div className="mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 tracking-tight">Performance & Analytics</h1>
-        <p className="text-gray-500 text-sm md:text-base">Track your learning progress and view your achievements.</p>
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-10 px-4 md:px-0">
+      
+      {/* Header Section */}
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">Performance Analytics</h1>
+        <p className="text-gray-500 text-base md:text-lg">
+          Detailed insights into your learning journey and quiz attempts.
+        </p>
       </div>
 
-      {/* Gamification Header */}
-      <div className="bg-gradient-to-r from-indigo-900 to-primary-900 rounded-3xl p-6 md:p-8 text-white shadow-xl overflow-hidden relative">
-        <div className="absolute top-0 right-0 opacity-10 translate-x-12 -translate-y-12">
-          <Trophy className="w-64 h-64 md:w-96 md:h-96" />
-        </div>
-        <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center justify-between">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className="w-20 h-20 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-white/20 shadow-inner">
-              <span className="text-3xl md:text-4xl font-bold text-white">{userData?.level || 1}</span>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg}`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-indigo-200 font-medium tracking-wide uppercase text-[10px] md:text-sm mb-1">Current Level</p>
-              <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-2">Level {userData?.level || 1} Scholar</h2>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] md:text-xs font-medium backdrop-blur-sm border border-white/10">
-                  {currentXP} Total XP
-                </span>
-              </div>
+              <p className="text-xs font-bold text-gray-500 mb-1 tracking-wide uppercase">{stat.label}</p>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">{stat.value}</h3>
             </div>
           </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Recent Activity */}
+        <div className="lg:col-span-2 space-y-8">
           
-          <div className="w-full md:w-1/3 bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10">
-            <div className="flex justify-between text-sm mb-2 font-medium text-indigo-100">
-              <span>{currentLevel < 5 ? `Progress to level ${currentLevel + 1}` : 'Max Level Reached'}</span>
-              <span>{currentLevel < 5 ? `${currentXP} / ${thresholds.max} XP` : `${currentXP} XP`}</span>
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                 <Activity className="w-5 h-5 text-primary-500" />
+                 Recent Attempts
+              </h3>
             </div>
-            <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] transition-all duration-1000 ease-out" 
-                style={{ width: `${progressPercent}%` }}
-              ></div>
+            <div className="divide-y divide-gray-100">
+              {attempts.length === 0 ? (
+                <div className="p-12 text-center text-gray-500">
+                  <p className="font-medium text-sm italic">No attempts yet. Play a quiz to see your scores!</p>
+                </div>
+              ) : (
+                attempts.map((attempt) => (
+                  <div key={attempt.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                        <Target className="w-5 h-5 text-primary-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-gray-900">{attempt.topic || 'Custom Quiz'}</h4>
+                        <p className="text-xs text-gray-500 font-medium mt-0.5">
+                          {new Date(attempt.timestamp?.toDate ? attempt.timestamp.toDate() : attempt.timestamp).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold ${
+                          attempt.score >= 80 ? 'bg-emerald-50 text-emerald-700' : 
+                          attempt.score >= 60 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
+                        }`}>
+                          {attempt.score}%
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteAttempt(attempt.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                        title="Delete attempt"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Quiz-wise Performance */}
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                 <BarChart2 className="w-5 h-5 text-primary-500" />
+                 Topic-wise Performance
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-4">
+                {quizWiseData.length === 0 ? (
+                  <p className="text-center text-gray-500 py-4 italic text-sm">No data available yet.</p>
+                ) : (
+                  quizWiseData.map((quiz, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm text-gray-900">{quiz.title}</h4>
+                        <p className="text-xs text-gray-500 font-medium mt-0.5">{quiz.count} attempts</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-xs font-bold text-gray-400 uppercase">Avg Score</p>
+                          <p className="text-lg font-extrabold text-gray-900">{quiz.avgScore}%</p>
+                        </div>
+                        <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${
+                              quiz.avgScore >= 80 ? 'bg-emerald-500' : 
+                              quiz.avgScore >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${quiz.avgScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Target className="w-6 h-6 md:w-7 md:h-7" />
-          </div>
-          <div>
-            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Total Quizzes</p>
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{totalQuizzes}</h3>
-          </div>
-        </div>
-        
-        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group">
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <TrendingUp className="w-6 h-6 md:w-7 md:h-7" />
-          </div>
-          <div>
-            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Average Score</p>
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{avgScore}%</h3>
-          </div>
-        </div>
-
-        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-all group sm:col-span-2 lg:col-span-1">
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Star className="w-6 h-6 md:w-7 md:h-7" />
-          </div>
-          <div>
-            <p className="text-xs md:text-sm font-medium text-gray-500 mb-1">Badges Earned</p>
-            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">{badges.filter(b => b.earned).length} / {badges.length}</h3>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Progress Chart */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Score Timeline</h3>
-          <div className="h-64">
-            {progressData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={progressData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    cursor={{stroke: '#e5e7eb', strokeWidth: 2, strokeDasharray: '3 3'}}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="score" 
-                    stroke="var(--color-primary-500)" 
-                    strokeWidth={4}
-                    dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                    activeDot={{ r: 6, fill: 'var(--color-primary-500)' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <TrendingUp className="w-12 h-12 mb-2 opacity-50" />
-                <p className="text-sm font-medium">Take quizzes to see your timeline!</p>
+        {/* Right Column: Best Performance */}
+        <div className="space-y-8">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-purple-500" />
+              Best Performance
+            </h3>
+            <div className="text-center py-4">
+              <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trophy className="w-10 h-10 text-purple-600" />
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Topic Breakdown */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Subject Performance</h3>
-          <div className="h-64">
-            {topicData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topicData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
-                  <Tooltip 
-                    cursor={{fill: '#f9fafb'}}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="score" fill="var(--color-primary-500)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <BookOpen className="w-12 h-12 mb-2 opacity-50" />
-                <p className="text-sm font-medium">No subject data available yet.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Badges and Achievements */}
-      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6">Achievements</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {badges.map((badge, idx) => (
-            <div key={idx} className={`p-4 md:p-6 rounded-2xl flex flex-col items-center text-center transition-all ${
-              badge.earned ? 'bg-white border-2 border-primary-100 shadow-sm' : 'bg-gray-50 border-2 border-transparent opacity-60 grayscale'
-            }`}>
-              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-3 md:mb-4 ${badge.bg}`}>
-                <badge.icon className={`w-6 h-6 md:w-8 md:h-8 ${badge.color}`} />
-              </div>
-              <h4 className="font-bold text-sm md:text-base text-gray-900 mb-1">{badge.name}</h4>
-              <p className="text-[10px] md:text-xs text-gray-500">{badge.earned ? 'Unlocked!' : 'Locked'}</p>
+              <h4 className="text-3xl font-extrabold text-gray-900 mb-1">{highestScore}%</h4>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Highest Ever Score</p>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+
