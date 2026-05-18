@@ -21,7 +21,7 @@ export default function GenerateQuiz() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  // Form State
+  // Form 
   const [topic, setTopic] = useState('');
   const [file, setFile] = useState(null);
   const [difficulty, setDifficulty] = useState('Medium');
@@ -53,8 +53,8 @@ export default function GenerateQuiz() {
         numQuestions: parseInt(numQuestions)
       });
 
-      // Navigate to the player with the generated data
-      // For a real app, we might save it to Firestore first and navigate to the Quiz ID
+      
+      
       navigate('/dashboard/play', { 
         state: { 
           quiz: { 

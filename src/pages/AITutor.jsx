@@ -33,7 +33,7 @@ export default function AITutor() {
     setIsLoading(true);
 
     try {
-      // Use the conversation history for context (up to last 10 messages to save tokens)
+      
       const messageHistory = messages.slice(-10);
       const response = await chatWithTutor(messageHistory, userMessage);
       

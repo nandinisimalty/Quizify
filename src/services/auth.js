@@ -28,19 +28,44 @@ export const registerUser = async (email, password, name, roleData) => {
     userData.subjects = roleData.subjects || [];
   }
   
-  // Create user document in Firestore
+  
   await setDoc(doc(db, 'users', user.uid), userData);
   
   return user;
 };
 
+const formatAuthError = (error) => {
+  if (!error || !error.code) return error?.message || 'Authentication failed.';
+
+  switch (error.code) {
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
+    case 'auth/user-not-found':
+      return 'No account found with that email.';
+    case 'auth/wrong-password':
+      return 'The password is incorrect. Please try again.';
+    default:
+      return error.message || 'Authentication failed. Please try again.';
+  }
+};
+
 export const loginUser = async (email, password) => {
   if (!auth) throw new Error("Firebase not initialized");
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  
+
+  let userCredential;
+  try {
+    userCredential = await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    const message = formatAuthError(error);
+    console.error('Firebase login error:', error.code, error.message);
+    throw new Error(message);
+  }
+
   try {
     const userDocRef = doc(db, 'users', userCredential.user.uid);
-    await setDoc(userDocRef, { 
+    await setDoc(userDocRef, {
       lastLoginDate: new Date().toISOString()
     }, { merge: true });
   } catch (err) {

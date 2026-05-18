@@ -49,7 +49,6 @@ export default function Signup() {
 
       await registerUser(email, password, name, roleData);
       
-      // Redirect based on role
       if (role === 'teacher') {
         navigate('/teacher-dashboard');
       } else {
@@ -59,7 +58,7 @@ export default function Signup() {
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to create an account. Please try again.');
-      setStep(1); // Go back if Firebase auth fails (e.g., email already in use)
+      setStep(1); 
     } finally {
       setLoading(false);
     }

@@ -7,7 +7,7 @@ export default function Landing() {
     <div className="min-h-screen bg-white selection:bg-primary-100 selection:text-primary-900">
       <Navbar />
       
-      {/* Hero Section */}
+      
       <section className="relative pt-24 pb-20 md:pt-40 md:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-2xl mx-auto">

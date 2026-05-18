@@ -1,7 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configure the worker explicitly for Vite/Browser environments
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export const extractTextFromPDF = async (file) => {
   try {
@@ -10,7 +10,7 @@ export const extractTextFromPDF = async (file) => {
     
     let fullText = '';
     
-    // Limit to first 10 pages to avoid performance issues and token limits
+    
     const numPages = Math.min(pdf.numPages, 10);
     
     for (let i = 1; i <= numPages; i++) {

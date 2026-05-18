@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If auth is not initialized (e.g., config missing), just stop loading
+    
     if (!auth) {
       setLoading(false);
       return;
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
             }
           });
         } else {
-          // Fallback if db is not available
+         //if database is not available
           try {
             const { getUserDetails } = await import('../services/auth');
             const data = await getUserDetails(user.uid);

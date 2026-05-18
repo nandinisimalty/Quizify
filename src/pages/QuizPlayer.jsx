@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { processUserActivity } from '../services/userLogic';
 import { doc, updateDoc, increment, collection, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { CheckCircle2, XCircle, ArrowRight, Trophy, Clock, AlertCircle, Zap } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, Trophy, Clock } from 'lucide-react';
 
 export default function QuizPlayer() {
   const location = useLocation();
@@ -23,7 +22,6 @@ export default function QuizPlayer() {
   const [leveledUpTo, setLeveledUpTo] = useState(null);
   const [usedHint, setUsedHint] = useState(false);
   const [earnedXp, setEarnedXp] = useState(0);
-  const [bonusData, setBonusData] = useState(null);
 
   useEffect(() => {
     if (!quiz) {
@@ -79,10 +77,10 @@ export default function QuizPlayer() {
   const handleFinishQuiz = async () => {
     setIsFinished(true);
     
-    // Calculate final score
+    //final score
     const finalPercentage = Math.round((score / quiz.questions.length) * 100);
     
-    // NEW XP Logic: Score-Based
+    //Score-Based XP
     let xpEarned = Math.floor(finalPercentage / 2);
     if (finalPercentage >= 80) xpEarned += 10;
     if (finalPercentage === 100) xpEarned += 20;
@@ -91,7 +89,7 @@ export default function QuizPlayer() {
     
     setEarnedXp(xpEarned);
     
-    // Save to Firestore if user is authenticated
+    
     if (currentUser && db) {
       try {
         // Save Attempt
@@ -127,16 +125,6 @@ export default function QuizPlayer() {
           xpPoints: increment(xpEarned),
           level: newLevel
         });
-
-        // Trigger Daily/Streak Bonus Checks
-        const activityResult = await processUserActivity(currentUser.uid, db);
-        if (activityResult && (activityResult.dailyBonus > 0 || activityResult.streakBonus > 0)) {
-           setBonusData(activityResult);
-           // Calculate if these extra bonuses caused a secondary level up
-           if (activityResult.levelUpTo && activityResult.levelUpTo > newLevel) {
-               setLeveledUpTo(activityResult.levelUpTo);
-           }
-        }
       } catch (error) {
         console.error("Error saving quiz results:", error);
       }
@@ -173,31 +161,6 @@ export default function QuizPlayer() {
           </div>
         )}
 
-        {/* Bonus Popups Overlay */}
-        {bonusData && (
-          <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 pointer-events-none">
-            {bonusData.dailyBonus > 0 && (
-              <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up pointer-events-auto">
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">+{bonusData.dailyBonus} XP Daily Bonus</h4>
-                </div>
-              </div>
-            )}
-            {bonusData.streakBonus > 0 && (
-              <div className="bg-white border border-orange-100 rounded-2xl p-4 shadow-xl flex items-center gap-4 animate-fade-in-up delay-100 pointer-events-auto">
-                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-lg">
-                  🔥
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-900">{bonusData.newStreak} Day Streak! +{bonusData.streakBonus} XP</h4>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary-100 mb-6">

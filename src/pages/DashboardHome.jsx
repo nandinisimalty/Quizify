@@ -144,7 +144,7 @@ export default function DashboardHome() {
     try {
       await deleteDoc(doc(db, 'attempts', attemptId));
       
-      // Update local state for immediate feedback
+      
       setRecentAttempts(prev => prev.filter(a => a.id !== attemptId));
     } catch (error) {
       console.error("Error deleting attempt:", error);
@@ -155,7 +155,7 @@ export default function DashboardHome() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 md:space-y-8 pb-10 px-4 md:px-0">
       
-      {/* Welcome Banner */}
+      
       <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col justify-center">
         <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">Welcome back, {userData?.name?.split(' ')[0] || 'Student'}! 👋</h1>
         <p className="text-gray-500 text-base md:text-lg">
@@ -163,7 +163,7 @@ export default function DashboardHome() {
         </p>
       </div>
 
-      {/* Stats Grid */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
@@ -178,7 +178,7 @@ export default function DashboardHome() {
         ))}
       </div>
 
-      {/* Quick Actions Grid */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link 
           to="/dashboard/generate" 
@@ -218,7 +218,7 @@ export default function DashboardHome() {
         {/* Left Column: XP & Quizzes */}
         <div className="lg:col-span-2 space-y-8">
           
-          {/* XP Progress Card */}
+          
           <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-end mb-6">
               <div>

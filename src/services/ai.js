@@ -33,44 +33,62 @@ Rules:
 Ensure the response is purely JSON without any markdown formatting blocks like \`\`\`json.
 `;
 
-  try {
-    const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
+  const maxRetries = 3;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData?.error?.message || "Failed to generate quiz from AI";
+        
+        // If it's a 503 (service unavailable) and not the last attempt, retry
+        if (response.status === 503 && attempt < maxRetries) {
+          console.warn(`AI service temporarily unavailable (attempt ${attempt}/${maxRetries}). Retrying in ${attempt * 2} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 2000)); // Exponential backoff
+          continue;
         }
-      })
-    });
+        
+        throw new Error(errorMessage);
+      }
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData?.error?.message || "Failed to generate quiz from AI");
+      const data = await response.json();
+      let textResponse = data.candidates[0].content.parts[0].text;
+      
+      
+      textResponse = textResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+      return JSON.parse(textResponse);
+    } catch (error) {
+      lastError = error;
+      console.error(`AI Generation Error (attempt ${attempt}/${maxRetries}):`, error);
+      
+      if (attempt === maxRetries) {
+        throw new Error(error.message || "Failed to process AI response after multiple attempts");
+      }
     }
-
-    const data = await response.json();
-    let textResponse = data.candidates[0].content.parts[0].text;
-    
-    // Clean up markdown serialization if the LLM adds it
-    textResponse = textResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-    return JSON.parse(textResponse);
-  } catch (error) {
-    console.error("AI Generation Error:", error);
-    throw new Error(error.message || "Failed to process AI response");
   }
 };
 
 export const chatWithTutor = async (history, currentMessage) => {
   if (!API_KEY) throw new Error("API Key missing");
 
-  // Format history for the prompt context
+  
   const historyText = history.map(msg => `${msg.role === 'user' ? 'Student' : 'Tutor'}: ${msg.content}`).join('\n');
   
   const prompt = `

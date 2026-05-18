@@ -46,7 +46,9 @@ export default function TeacherHome() {
 
       setQuizzesCreated(Object.keys(quizzesMap).length);
       setTotalAttempts(attemptCount);
-      setAvgScore(attemptCount > 0 ? Math.round(totalScore / attemptCount) : 0);
+      setAvgScore(attemptCount > 0 
+        ? Math.round(totalScore / attemptCount) 
+        : 0);
       setLoading(false);
     };
 

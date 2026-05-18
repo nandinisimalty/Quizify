@@ -20,12 +20,12 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+          
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Student Routes */}
+          
           <Route element={<PrivateRoute allowedRoles={['student']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<DashboardHome />} />
@@ -36,7 +36,7 @@ function App() {
             </Route>
           </Route>
 
-          {/* Teacher Routes */}
+          
           <Route element={<PrivateRoute allowedRoles={['teacher']} />}>
             <Route element={<TeacherLayout />}>
               <Route path="/teacher-dashboard" element={<TeacherHome />} />

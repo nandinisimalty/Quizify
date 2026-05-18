@@ -18,9 +18,9 @@ export default function PrivateRoute({ allowedRoles }) {
   }
 
   if (allowedRoles && userData && !allowedRoles.includes(userData.role)) {
-    // If they are a student trying to access teacher route, send to student dash
+    
     if (userData.role === 'student') return <Navigate to="/dashboard" replace />;
-    // If they are a teacher trying to access student route, send to teacher dash
+    
     if (userData.role === 'teacher') return <Navigate to="/teacher-dashboard" replace />;
   }
 

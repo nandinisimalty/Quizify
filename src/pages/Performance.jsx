@@ -112,7 +112,7 @@ export default function Performance() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Recent Activity */}
+        {/* Recent Activity */}
         <div className="lg:col-span-2 space-y-8">
           
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
@@ -206,7 +206,7 @@ export default function Performance() {
           </div>
         </div>
 
-        {/* Right Column: Best Performance */}
+        {/* Best Performance */}
         <div className="space-y-8">
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">

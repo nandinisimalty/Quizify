@@ -104,11 +104,10 @@ export default function TeacherQuizzes() {
 
       await addDoc(collection(db, 'quizzes'), quizData);
       
-      // Update UI
+      
       setSuccess("Quiz successfully created and assigned!");
       fetchQuizzes();
       
-      // Reset Form
       setTitle('');
       setTopic('');
       setDueDate('');
